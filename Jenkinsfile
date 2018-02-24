@@ -94,6 +94,14 @@ pipeline {
 		)
 	    }
 	}
+        stage('Docker agent test') {
+            agent {
+                docker { image 'geneontology/golr:2018-02-23T202407' }
+            }
+            steps {
+                sh 'ls /srv'
+            }
+        }
 	// Build owltools and get it into the shared filesystem.
 	stage('Ready production software') {
 	    steps {
