@@ -98,7 +98,7 @@ pipeline {
             agent {
                 docker {
 		    image 'geneontology/golr-autoindex:2018-03-12T161037'
-		    args "$WORKSPACE/srv-solr-data:/srv/solr/data"
+		    args "${WORKSPACE}/srv-solr-data:/srv/solr/data"
 		}
             }
             steps {
