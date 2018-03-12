@@ -40,7 +40,7 @@ pipeline {
 	// cancel and clean the workspace before use.
 	stage('Ready and clean') {
 	    steps {
-		sleep time: 1, unit: 'MINUTES'
+		//sleep time: 1, unit: 'MINUTES'
 		cleanWs()
 	    }
 	}
