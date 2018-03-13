@@ -104,8 +104,8 @@ pipeline {
             steps {
                 sh 'ls /srv'
                 sh 'ls /tmp'
-		sh 'whoami'
-		sh 'chmod 777 /tmp/run-indexer.sh'
+		//sh 'whoami'
+		//sh 'chmod 777 /tmp/run-indexer.sh'
 		sh '/tmp/run-indexer.sh'
             }
         }
