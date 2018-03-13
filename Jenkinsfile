@@ -97,8 +97,8 @@ pipeline {
         stage('Docker agent test') {
             agent {
                 docker {
-		    image 'geneontology/golr-autoindex:2018-03-12T161037'
-		    args '-u root:jenkins -v /tmp/srv-solr-data-exp-01:/srv/solr/data'
+		    image 'geneontology/golr-autoindex:2018-03-12T175331'
+		    args '-v /tmp/srv-solr-data-exp-01:/srv/solr/data'
 		}
             }
             steps {
