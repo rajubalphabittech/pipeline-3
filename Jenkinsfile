@@ -83,8 +83,6 @@ pipeline {
 			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/annotations || true'
 			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/ontology || true'
 			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/reports || true'
-			// Make a drop point for indices.
-			sh 'mkdir -p /tmp/srv-solr-data-exp-01 || true'
 			// Tag the top to let the world know I was at least
 			// here.
 			sh 'echo "TODO: Note software versions." > $WORKSPACE/mnt/$BRANCH_NAME/manifest.txt'
@@ -115,8 +113,25 @@ pipeline {
 		// sh 'rm -f /srv/solr/data/index/_*.* || true'
 		// sh 'rm -f /srv/solr/data/index/segments* || true'
 		//sh 'rm -f /srv/solr/data || true'
+
+		// Build index into tmpfs.
 		sh 'bash /tmp/run-indexer.sh'
+
+		// Copy tmpfs Solr contents onto skyhook.
+		//sh 'mkdir -p $WORKSPACE/mnt/ || true'
+		//withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
+		//sh 'sshfs -oStrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY -o idmap=user skyhook@skyhook.berkeleybop.org:/home/skyhook $WORKSPACE/mnt/'
+		//sh 'rsync  $WORKSPACE/mnt/$BRANCH_NAME/products/solr/'
+		sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /srv/solr/data/index/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/solr/'
+		//}
             }
+	    // WARNING: Extra safety as I expect this to sometimes fail.
+	    post {
+                always {
+		    // Bail on the remote filesystem.
+		    sh 'fusermount -u $WORKSPACE/mnt/ || true'
+		}
+	    }
         }
     }
 }
