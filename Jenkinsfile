@@ -104,7 +104,8 @@ pipeline {
             steps {
                 sh 'ls /srv'
                 sh 'ls /tmp'
-		//sh 'bash /tmp/run-indexer.sh'
+		sh 'chmod +x /tmp/run-indexer.sh'
+		sh '/tmp/run-indexer.sh'
             }
         }
     }
