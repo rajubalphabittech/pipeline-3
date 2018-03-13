@@ -101,7 +101,8 @@ pipeline {
 		    // Unsure why Jenkins Docker agent default is to
 		    // override with random IDs, but reset to original
 		    // root.
-		    args '-u root:root -v /tmp/srv-solr-data-exp-01:/srv/solr/data'
+		    // args '-u root:root -v /tmp/srv-solr-data-exp-01:/srv/solr/data'
+		    args '-u root:jenkins -v /tmp/srv-solr-data-exp-01:/srv/solr/data'
 		}
             }
             steps {
