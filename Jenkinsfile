@@ -108,7 +108,8 @@ pipeline {
                 sh 'ls /srv'
                 sh 'ls /tmp'
 		// Reset the data on disk.
-		sh 'rm -r -f /srv/solr/data || true'
+		sh 'rm -f /srv/solr/data/index/_* || true'
+		sh 'rm -f /srv/solr/data/index/segments* || true'
 		sh 'bash /tmp/run-indexer.sh'
             }
         }
