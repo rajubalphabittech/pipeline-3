@@ -98,14 +98,14 @@ pipeline {
             agent {
                 docker {
 		    image 'geneontology/golr-autoindex:2018-03-12T161037'
-		    args '-v /tmp/srv-solr-data-exp-01:/srv/solr/data'
+		    args '-u root:jenkins -v /tmp/srv-solr-data-exp-01:/srv/solr/data'
 		}
             }
             steps {
                 sh 'ls /srv'
                 sh 'ls /tmp'
 		sh 'whoami'
-		sh 'chmod +x /tmp/run-indexer.sh'
+		sh 'chmod 777 /tmp/run-indexer.sh'
 		sh '/tmp/run-indexer.sh'
             }
         }
