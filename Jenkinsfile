@@ -104,7 +104,8 @@ pipeline {
 		    // override with random IDs, but reset to original
 		    // root.
 		    //args '-u root:root -v /tmp/srv-solr-data-exp-01:/srv/solr/data'
-		    args '-v /tmp/srv-solr-data-exp-01:/srv/solr/data'
+		    //args '-v /tmp/srv-solr-data-exp-01:/srv/solr/data'
+		    args '--mount type=tmpfs,destination=/srv/solr/data'
 		}
             }
             steps {
