@@ -97,16 +97,17 @@ pipeline {
         stage('Docker agent test') {
             agent {
                 docker {
-		    image 'geneontology/golr-autoindex:2018-03-12T175331'
+		    image 'geneontology/golr-autoindex:2018-03-12T180727'
+		    // Unsure why Jenkins Docker agent default is to
+		    // override with random IDs, but reset to original
+		    // root.
 		    args '-u root:root -v /tmp/srv-solr-data-exp-01:/srv/solr/data'
 		}
             }
             steps {
                 sh 'ls /srv'
                 sh 'ls /tmp'
-		//sh 'whoami'
-		//sh 'chmod 777 /tmp/run-indexer.sh'
-		sh '/tmp/run-indexer.sh'
+		sh 'bash /tmp/run-indexer.sh'
             }
         }
     }
