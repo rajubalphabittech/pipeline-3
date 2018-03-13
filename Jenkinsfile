@@ -83,6 +83,8 @@ pipeline {
 			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/annotations || true'
 			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/ontology || true'
 			sh 'mkdir -p $WORKSPACE/mnt/$BRANCH_NAME/reports || true'
+			// Make a drop point for indices.
+			sh 'mkdir -p /tmp/srv-solr-data-exp-01 || true'
 			// Tag the top to let the world know I was at least
 			// here.
 			sh 'echo "TODO: Note software versions." > $WORKSPACE/mnt/$BRANCH_NAME/manifest.txt'
