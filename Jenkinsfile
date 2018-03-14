@@ -119,19 +119,12 @@ pipeline {
 
 		// Copy tmpfs Solr contents onto skyhook.
 		//sh 'mkdir -p $WORKSPACE/mnt/ || true'
+		sh 'gzip -c /srv/solr/data/index/* > /tmp/golr-index-contents.gz'
 		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-		    //sh 'sshfs -oStrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY -o idmap=user skyhook@skyhook.berkeleybop.org:/home/skyhook $WORKSPACE/mnt/'
-		    //sh 'rsync  $WORKSPACE/mnt/$BRANCH_NAME/products/solr/'
-		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /srv/solr/data/index/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/solr/'
+		    //sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /srv/solr/data/index/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/solr/'
+		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /tmp/golr-index-contents.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/solr/'
 		}
             }
-	    // // WARNING: Extra safety as I expect this to sometimes fail.
-	    // post {
-            //     always {
-	    // 	    // Bail on the remote filesystem.
-	    // 	    sh 'fusermount -u $WORKSPACE/mnt/ || true'
-	    // 	}
-	    // }
         }
     }
 }
