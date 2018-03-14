@@ -98,31 +98,25 @@ pipeline {
             agent {
                 docker {
 		    image 'geneontology/golr-autoindex:2018-03-12T180727'
-		    // Unsure why Jenkins Docker agent default is to
-		    // override with random IDs, but reset to original
+		    // Reset Jenkins Docker agent default to original
 		    // root.
-		    //args '-u root:root -v /tmp/srv-solr-data-exp-01:/srv/solr/data'
-		    //args '-v /tmp/srv-solr-data-exp-01:/srv/solr/data'
 		    args '-u root:root --mount type=tmpfs,destination=/srv/solr/data'
 		}
             }
             steps {
-                sh 'ls /srv'
-                sh 'ls /tmp'
-		// Reset the data on disk.
-		// sh 'rm -f /srv/solr/data/index/_*.* || true'
-		// sh 'rm -f /srv/solr/data/index/segments* || true'
-		//sh 'rm -f /srv/solr/data || true'
+                // sh 'ls /srv'
+                // sh 'ls /tmp'
 
 		// Build index into tmpfs.
 		sh 'bash /tmp/run-indexer.sh'
 
 		// Copy tmpfs Solr contents onto skyhook.
-		//sh 'mkdir -p $WORKSPACE/mnt/ || true'
 		sh 'gzip -c /srv/solr/data/index/* > /tmp/golr-index-contents.gz'
 		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-		    //sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /srv/solr/data/index/* skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/solr/'
+		    // Copy over index.
 		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /tmp/golr-index-contents.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/solr/'
+		    // Copy over log.
+		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /tmp/golr_timestamp.log skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/solr/'
 		}
             }
         }
