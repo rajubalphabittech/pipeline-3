@@ -97,7 +97,7 @@ pipeline {
         stage('Docker agent test') {
             agent {
                 docker {
-		    image 'geneontology/golr-autoindex:2018-03-12T180727'
+		    image 'geneontology/golr-autoindex:2018-03-15T141437'
 		    // Reset Jenkins Docker agent default to original
 		    // root.
 		    args '-u root:root --mount type=tmpfs,destination=/srv/solr/data'
