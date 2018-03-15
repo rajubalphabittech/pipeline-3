@@ -111,7 +111,7 @@ pipeline {
 		sh 'bash /tmp/run-indexer.sh'
 
 		// Copy tmpfs Solr contents onto skyhook.
-		sh 'tar zcvf /tmp/golr-index-contents.tar.gz /srv/solr/data/index'
+		sh 'tar -zcvf /tmp/golr-index-contents.tar.gz -C /srv/solr/data/index .'
 		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
 		    // Copy over index.
 		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /tmp/golr-index-contents.tar.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/solr/'
