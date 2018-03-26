@@ -31,6 +31,9 @@ pipeline {
 	// Information for the OSF.io archive.
 	OSFIO_USER = 'osf.io@genkisugi.net'
 	OSFIO_PROJECT = '6v3gx'
+	// GOlr load profile.
+	GOLR_INPUT_ONTOLOGIES = "http://skyhook.berkeleybop.org/release/ontology/extensions/go-gaf.owl"
+	GOLR_INPUT_GAFS = "http://www.geneontology.org/gene-associations/submission/paint/pre-submission/gene_association.paint_other.gaf http://skyhook.berkeleybop.org/release/annotations/aspgd.gaf.gz"
     }
     options{
 	timestamps()
@@ -97,7 +100,7 @@ pipeline {
         stage('Docker agent test') {
             agent {
                 docker {
-		    image 'geneontology/golr-autoindex:2018-03-16T182239'
+		    image 'geneontology/golr-autoindex:2018-03-26T144735'
 		    // Reset Jenkins Docker agent default to original
 		    // root.
 		    args '-u root:root --mount type=tmpfs,destination=/srv/solr/data'
