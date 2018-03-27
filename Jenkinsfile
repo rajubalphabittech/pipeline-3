@@ -33,7 +33,10 @@ pipeline {
 	OSFIO_PROJECT = '6v3gx'
 	// GOlr load profile.
 	GOLR_INPUT_ONTOLOGIES = "http://skyhook.berkeleybop.org/release/ontology/extensions/go-gaf.owl"
-	GOLR_INPUT_GAFS = "http://www.geneontology.org/gene-associations/submission/paint/pre-submission/gene_association.paint_other.gaf http://skyhook.berkeleybop.org/release/annotations/aspgd.gaf.gz"
+	GOLR_INPUT_GAFS = [
+	    "http://skyhook.berkeleybop.org/release/annotations/aspgd.gaf.gz",
+	    "http://www.geneontology.org/gene-associations/submission/paint/pre-submission/gene_association.paint_other.gaf"
+	].join(" ")
     }
     options{
 	timestamps()
