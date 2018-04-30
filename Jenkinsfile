@@ -279,7 +279,7 @@ pipeline {
 			    // declarative
 			    // (https://github.com/pypa/pip/issues/1773).
 			    // There are other tacks we might take
-			    sh 'python3 ./mypyenv/bin/pip3 --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple install -r requirements.txt'
+			    sh 'python3 ./mypyenv/bin/pip3 install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple -r requirements.txt'
 			    sh 'python3 ./mypyenv/bin/pip3 install ../graphstore/rule-runner'
 			    // Ready, set...
 			    sh '$MAKECMD clean'
