@@ -22,14 +22,14 @@ pipeline {
 	    returnStdout: true
 	).trim()
 	// The branch of geneontology/go-site to use.
-	TARGET_GO_SITE_BRANCH = 'iteration'
+	TARGET_GO_SITE_BRANCH = 'ontobio-refactor-test'
 	// The people to call when things go bad. It is a comma-space
 	// "separated" string.
-	TARGET_ADMIN_EMAILS = 'sjcarbon@lbl.gov'
+	TARGET_ADMIN_EMAILS = 'edouglass@lbl.gov'
 	// The file bucket(/folder) combination to use.
-	TARGET_BUCKET = 'go-data-product-experimental'
+	TARGET_BUCKET = '' //'go-data-product-experimental'
 	// The URL prefix to use when creating site indices.
-	TARGET_INDEXER_PREFIX = 'http://experimental.geneontology.io'
+	TARGET_INDEXER_PREFIX = '' //'http://experimental.geneontology.io'
 	// The Zenodo concept ID to use for releases (and occasionally
 	// master testing).
 	ZENODO_REFERENCE_CONCEPT = '199441'
@@ -279,7 +279,7 @@ pipeline {
 			    // declarative
 			    // (https://github.com/pypa/pip/issues/1773).
 			    // There are other tacks we might take
-			    sh 'python3 ./mypyenv/bin/pip3 install -r requirements.txt'
+			    sh 'python3 ./mypyenv/bin/pip3 --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple install -r requirements.txt'
 			    sh 'python3 ./mypyenv/bin/pip3 install ../graphstore/rule-runner'
 			    // Ready, set...
 			    sh '$MAKECMD clean'
@@ -292,9 +292,9 @@ pipeline {
 				// // For GAF joy, plus "extras".
 				// sh 'make all'
 				// Shaking the magic beads for "extras".
-                		sh '$MAKECMD -e extra_files'
+                		// sh '$MAKECMD -e extra_files'
 				// Make basic (non-enriched/reasoned) TTLs.
-				sh '$MAKECMD -e all_targets_ttl'
+				sh '$MAKECMD -e target/sparta-report.json'
 
 				// // Make journals with what we have
 				// // on the filesystem, for
@@ -308,7 +308,7 @@ pipeline {
 				// As long as we're here and have
 				// everything handy: this is
 				// SPARTA!
-				sh '$MAKECMD -e target/sparta-report.json'
+				// sh '$MAKECMD -e target/sparta-report.json'
 			    }
 
 			}
@@ -319,9 +319,9 @@ pipeline {
 			    //  - all irregular gaffy files + anything paint-y
 			    //  - but not uniprot_all anything (elsewhere)
 			    //  - and not any of the ttls
-			    sh 'find ./target/groups -type f -regex "^.*\\(\\-src.gaf\\|\\_noiea.gaf\\|\\_merged.gaf\\|paint\\_.*\\).gz$" -not -regex "^.*goa_uniprot_all.*$" -not -regex "^.*.ttl.gz$" -not -regex "^.*goa_uniprot_all_noiea.gaf.gz$" -not -regex "^.*.ttl.gz$" -exec scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY {} skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations \\;'
+			    sh 'find ./target/groups -type f -regex "^.*\\(\\-src.gaf\\|\\_noiea.gaf\\|\\_valid.gaf\\|paint\\_.*\\).gz$" -not -regex "^.*goa_uniprot_all.*$" -not -regex "^.*.ttl.gz$" -not -regex "^.*goa_uniprot_all_noiea.gaf.gz$" -not -regex "^.*.ttl.gz$" -exec scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY {} skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations \\;'
 			    // Now copy over the (single) uniprot non-core.
-			    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY ./target/groups/goa_uniprot_all/goa_uniprot_all-src.gaf.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations'
+			    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY ./target/groups/goa/goa_uniprot_all-src.gaf.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations'
 			    // Finally, the non-zipped prediction files.
 			    sh 'find ./target/groups -type f -regex "^.*\\-prediction.gaf$" -exec scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY {} skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/annotations \\;'
 			    // Flatten all GAFs and GAF-like products
@@ -329,14 +329,14 @@ pipeline {
 			    //  - all product-y files
 			    //  - but not uniprot_all anything (elsewhere)
 			    //  - and not anything "irregular"
-			    sh 'find ./target/groups -type f -regex "^.*.\\(gaf\\|gpad\\|gpi\\).gz$" -not -regex "^.*\\(\\-src.gaf\\|\\_noiea.gaf\\|\\_merged.gaf\\|paint_.*\\).gz$" -exec scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY {} skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/annotations \\;'
+			    sh 'find ./target/groups -type f -regex "^.*.\\(gaf\\|gpad\\|gpi\\).gz$" -not -regex "^.*\\(\\-src.gaf\\|\\_noiea.gaf\\|\\_valid.gaf\\|paint_.*\\).gz$" -exec scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY {} skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/annotations \\;'
 			    // Now copy over the four uniprot core.
-			    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY ./target/groups/goa_uniprot_all/goa_uniprot_all.gaf.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/annotations'
-			    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY ./target/groups/goa_uniprot_all/goa_uniprot_all_noiea.gaf.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/annotations'
-			    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY ./target/groups/goa_uniprot_all/goa_uniprot_all_noiea.gpi.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/annotations'
-			    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY ./target/groups/goa_uniprot_all/goa_uniprot_all_noiea.gpad.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/annotations'
+			    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY ./target/groups/goa/goa_uniprot_all.gaf.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/annotations'
+			    sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY ./target/groups/goa/goa_uniprot_all_noiea.gaf.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/annotations'
+			    // sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY ./target/groups/goa/goa_uniprot_all_noiea.gpi.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/annotations'
+			    // sh 'scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY ./target/groups/goa/goa_uniprot_all_noiea.gpad.gz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/annotations'
 			    // Flatten the TTLs into products/ttl/.
-			    sh 'find ./target/groups -type f -name "*.ttl.gz" -exec scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY {} skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/ttl \\;'
+			    sh 'find ./target/groups/ -type f -name "*.ttl.gz" -exec scp -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY {} skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/ttl \\;'
 			    // Compress the journals.
                 	    sh 'pigz target/blazegraph-internal.jnl'
                 	    sh 'pigz target/blazegraph-production.jnl'
