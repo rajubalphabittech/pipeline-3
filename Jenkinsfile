@@ -27,9 +27,9 @@ pipeline {
 	// "separated" string.
 	TARGET_ADMIN_EMAILS = 'edouglass@lbl.gov'
 	// The file bucket(/folder) combination to use.
-	TARGET_BUCKET = '' //'go-data-product-experimental'
+	TARGET_BUCKET = 'nope' //'go-data-product-experimental'
 	// The URL prefix to use when creating site indices.
-	TARGET_INDEXER_PREFIX = '' //'http://experimental.geneontology.io'
+	TARGET_INDEXER_PREFIX = 'nope2' //'http://experimental.geneontology.io'
 	// The Zenodo concept ID to use for releases (and occasionally
 	// master testing).
 	ZENODO_REFERENCE_CONCEPT = '199441'
