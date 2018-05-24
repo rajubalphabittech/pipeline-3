@@ -22,12 +22,12 @@ pipeline {
 	    returnStdout: true
 	).trim()
 	// The branch of geneontology/go-site to use.
-	TARGET_GO_SITE_BRANCH = 'iteration'
+	TARGET_GO_SITE_BRANCH = 'splitting_paint_iteration'
 	// The people to call when things go bad. It is a comma-space
 	// "separated" string.
-	TARGET_ADMIN_EMAILS = 'sjcarbon@lbl.gov'
+	TARGET_ADMIN_EMAILS = 'edouglass@lbl.gov'
 	// The file bucket(/folder) combination to use.
-	TARGET_BUCKET = 'go-data-product-experimental'
+	TARGET_BUCKET = 'none'
 	// The URL prefix to use when creating site indices.
 	TARGET_INDEXER_PREFIX = 'http://experimental.geneontology.io'
 	// The Zenodo concept ID to use for releases (and occasionally
@@ -279,7 +279,7 @@ pipeline {
 			    // declarative
 			    // (https://github.com/pypa/pip/issues/1773).
 			    // There are other tacks we might take
-			    sh 'python3 ./mypyenv/bin/pip3 install -r requirements.txt'
+			    sh 'python3 ./mypyenv/bin/pip3 install --extra-index-url https://testpypi.python.org/pypi -r requirements.txt'
 			    sh 'python3 ./mypyenv/bin/pip3 install ../graphstore/rule-runner'
 			    // Ready, set...
 			    sh '$MAKECMD clean'
