@@ -229,6 +229,9 @@ pipeline {
 		    dir('./go-site') {
 			git branch: TARGET_GO_SITE_BRANCH, url: 'https://github.com/geneontology/go-site.git'
 
+			sh 'pwd'
+			sh 'ls -AlF $WORKSPACE/mnt/$BRANCH_NAME'
+
 			// WARNING: Caveats and reasons as same
 			// pattern above. We need this as some clients
 			// are not standard and it turns out there are
