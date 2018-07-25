@@ -285,6 +285,8 @@ pipeline {
 
 				    // Tarball the whole directory for
 				    // "deep" archive (handmade BDBag).
+				    sh 'pwd'
+				    sh 'ls -AlF $WORKSPACE/mnt/$BRANCH_NAME'
 				    sh 'tar --use-compress-program=pigz -cvf go-release-archive.tgz -C $WORKSPACE/mnt/$BRANCH_NAME .'
 
 				    // Archive it too.
@@ -299,6 +301,7 @@ pipeline {
 				    // archive references in our
 				    // archive).
 				    sh 'pwd'
+				    sh 'ls -AlF $WORKSPACE/mnt/$BRANCH_NAME'
 				    sh 'cp go-release-reference.tgz $WORKSPACE/mnt/$BRANCH_NAME/metadata/go-release-reference.tgz'
 				    sh 'cp manifest.json $WORKSPACE/mnt/$BRANCH_NAME/metadata/bdbag-manifest.json'
 				    sh 'cp release-reference-doi.json $WORKSPACE/mnt/$BRANCH_NAME/metadata/release-reference-doi.json'
