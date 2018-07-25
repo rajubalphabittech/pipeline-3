@@ -144,14 +144,16 @@ pipeline {
 	    steps {
 		parallel(
 		    "Ready owltools": {
-			// Legacy: build 'owltools-build'
+			sh 'sleep 0'
 		    },
 		    "Ready robot": {
-		    	// Legacy: build 'robot-build'
+			sh 'sleep 0'
 		    },
 		    "Ready arachne": {
+			sh 'sleep 0'
 		    },
 		    "Ready blazegraph-runner": {
+			sh 'sleep 0'
 		    }
 		)
 	    }
@@ -162,18 +164,18 @@ pipeline {
 	// a a release, and deploys to S3
 	stage('Produce ontology') {
 	    steps {
-		// Legacy: build 'ontology-production'
+		sh 'sleep 0'
 	    }
 	}
 	stage('Produce GAFs, TTLs, and journal (mega-step)') {
 	    steps {
-		// Legacy: build 'gaf-production'
+		sh 'sleep 0'
 	    }
 	}
 	// A new step to think about. What is our core metadata?
 	stage('Produce metadata') {
 	    steps {
-
+		sh 'sleep 0'
 	    }
 	    // WARNING: Extra safety as I expect this to sometimes fail.
 	    post {
@@ -187,6 +189,7 @@ pipeline {
 	}
 	stage('Sanity I') {
 	    steps {
+		sh 'sleep 0'
 	    }
 	    // WARNING: Extra safety as I expect this to sometimes fail.
 	    post {
@@ -201,6 +204,7 @@ pipeline {
 	//...
 	stage('Produce derivatives') {
             steps {
+		sh 'sleep 0'
             }
 	}
 	//...
@@ -315,6 +319,7 @@ pipeline {
 	stage('Publish') {
 	    when { anyOf { branch 'release'; branch 'snapshot'; branch 'master' } }
 	    steps {
+		sh 'sleep 0'
 	    }
 	    // WARNING: Extra safety as I expect this to sometimes fail.
 	    post {
@@ -328,6 +333,7 @@ pipeline {
 	stage('Deploy') {
 	    when { anyOf { branch 'release' } }
 	    steps {
+		sh 'sleep 0'
 	    }
 	    // WARNING: Extra safety as I expect this to sometimes fail.
 	    post {
