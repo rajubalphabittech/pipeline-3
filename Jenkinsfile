@@ -214,7 +214,7 @@ pipeline {
 	    }
 	}
 	stage('Archive') {
-	    when { anyOf { branch 'release'; branch 'master' } }
+	    when { anyOf { branch 'release'; branch 'master'; branch 'issue-009-zenodo' } }
 	    steps {
 		// Experimental stanza to support mounting the sshfs
 		// using the "hidden" skyhook identity.
