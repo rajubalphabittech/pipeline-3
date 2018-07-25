@@ -354,8 +354,4 @@ pipeline {
 	//     }
 	// }
     }
-    // Let's make an announcement if things go badly.
-    post {
-	sh 'sleep 0'
-    }
 }
