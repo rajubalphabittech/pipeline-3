@@ -265,7 +265,7 @@ pipeline {
 				// special bucket mappings in mind.
 				if( env.BRANCH_NAME == 'release' ){
 				    sh 'python3 ./scripts/create-bdbag-remote-file-manifest.py -v --walk $WORKSPACE/mnt/$BRANCH_NAME/ --remote http://release.geneontology.org/$START_DATE --output manifest.json'
-				}else if( env.BRANCH_NAME == 'master' ){
+				}else if( env.BRANCH_NAME == 'issue-009-zenodo' ){
 				    sh 'python3 ./scripts/create-bdbag-remote-file-manifest.py -v --walk $WORKSPACE/mnt/$BRANCH_NAME/ --remote $TARGET_INDEXER_PREFIX --output manifest.json'
 
 				    // Make holey BDBag in fixed directory.
