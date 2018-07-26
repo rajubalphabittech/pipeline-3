@@ -297,7 +297,7 @@ pipeline {
 				    sh 'pwd'
 
 				    // Archive it too.
-				    sh 'python3 ./scripts/zenodo-version-update.py --verbose --sandbox --key $ZENODO_TOKEN --concept $ZENODO_ARCHIVE_CONCEPT --file $WORKSPACE/go-site/go-release-archive.tgz --output ./release-archive-doi.json --revision $START_DATE'
+				    sh 'python3 ./scripts/zenodo-version-update.py --verbose --sandbox --key $ZENODO_TOKEN --concept $ZENODO_ARCHIVE_CONCEPT --file go-release-archive.tgz --output ./release-archive-doi.json --revision $START_DATE'
 
 				    // Copy the referential metadata
 				    // files and DOIs to skyhook
