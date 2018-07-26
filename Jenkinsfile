@@ -284,7 +284,7 @@ pipeline {
 				    // BDBags change directory layout
 				    // (e.g. data/).
 				    sh 'mkdir -p $WORKSPACE/copyover/ || true'
-				    sh 'cp $WORKSPACE/mnt/$BRANCH_NAME/* $WORKSPACE/copyover/'
+				    sh 'cp -r $WORKSPACE/mnt/$BRANCH_NAME/* $WORKSPACE/copyover/'
 				    // Make the BDBag in the copyover/
 				    // (unarchived, as we want to
 				    // leave it to pigz).
