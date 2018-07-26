@@ -288,7 +288,7 @@ pipeline {
 				    // Make the BDBag in the copyover/
 				    // (unarchived, as we want to
 				    // leave it to pigz).
-				    sh 'python3 ./mypyenv/bin/bdbag $WORKSPACE/mnt/$BRANCH_NAME/copyover'
+				    sh 'python3 ./mypyenv/bin/bdbag $WORKSPACE/copyover'
 
 				    // Tarball the whole directory for
 				    // "deep" archive (handmade BDBag).
