@@ -294,7 +294,7 @@ pipeline {
 				    // "deep" archive (handmade BDBag).
 				    sh 'pwd'
 				    sh 'ls -AlF $WORKSPACE/mnt/$BRANCH_NAME'
-				    sh 'tar --use-compress-program=pigz -cvf go-release-archive.tgz -C $WORKSPACE/mnt/$BRANCH_NAME/copyover .'
+				    sh 'tar --use-compress-program=pigz -cvf go-release-archive.tgz -C $WORKSPACE/copyover .'
 
 				    // Archive it too.
 				    sh 'python3 ./scripts/zenodo-version-update.py --verbose --sandbox --key $ZENODO_TOKEN --concept $ZENODO_ARCHIVE_CONCEPT --file go-release-archive.tgz --output ./release-archive-doi.json --revision $START_DATE'
