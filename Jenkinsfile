@@ -325,7 +325,7 @@ pipeline {
 		    // Bail on the remote filesystem.
 		    sh 'fusermount -u $WORKSPACE/mnt/ || true'
 		    // Purge the copyover point.
-		    sh 'rm -r -f $WORKSPACE/copyover || true'
+		    //sh 'rm -r -f $WORKSPACE/copyover || true'
 		}
 	    }
 	}
