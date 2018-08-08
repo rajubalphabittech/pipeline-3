@@ -30,6 +30,11 @@ pipeline {
 	TARGET_BUCKET = 'no'
 	// The URL prefix to use when creating site indices.
 	TARGET_INDEXER_PREFIX = ''
+	// This variable should typically be 'TRUE', which will cause
+	// some additional basic checks to be made. There are some
+	// very exotic cases where these check may need to be skipped
+	// for a run, in that case this variable is set to 'FALSE'.
+	WE_ARE_BEING_SAFE_P = 'TRUE'
 	// The Zenodo concept ID to use for releases (and occasionally
 	// master testing).
 	ZENODO_REFERENCE_CONCEPT = '199441'
@@ -243,8 +248,14 @@ pipeline {
 		    }
 		    // Now that the files are safely away onto skyhook
 		    // for debugging, test for the core dump.
-		    if( fileExists './target/core_dump.owl' ){
-			error 'ROBOT core dump detected--bailing out.'
+		    script {
+			if( WE_ARE_BEING_SAFE_P == 'TRUE' ){
+
+			    def found_core_dump_p = fileExists './target/core_dump.owl'
+			    if( found_core_dump_p ){
+				error 'ROBOT core dump detected--bailing out.'
+			    }
+			}
 		    }
 		}
 	    }
@@ -589,13 +600,17 @@ pipeline {
 			    // into the scripting mode.
 			    script {
 
-				// Build a testing version of a
-				// generic BDBag/DOI workflow, keeping
-				// special bucket mappings in mind.
-				if( env.BRANCH_NAME == 'release' ){
-				    sh 'python3 ./scripts/create-bdbag-remote-file-manifest.py -v --walk $WORKSPACE/mnt/$BRANCH_NAME/ --remote http://release.geneontology.org/$START_DATE --output manifest.json'
-				}else if( env.BRANCH_NAME == 'master' ){
-				    sh 'python3 ./scripts/create-bdbag-remote-file-manifest.py -v --walk $WORKSPACE/mnt/$BRANCH_NAME/ --remote $TARGET_INDEXER_PREFIX --output manifest.json'
+				// Build either a release or testing
+				// version of a generic BDBag/DOI
+				// workflow, keeping special bucket
+				// mappings in mind.
+				if( env.BRANCH_NAME == 'release' || env.BRANCH_NAME == 'master' ){
+
+				    if( env.BRANCH_NAME == 'release' ){
+					sh 'python3 ./scripts/create-bdbag-remote-file-manifest.py -v --walk $WORKSPACE/mnt/$BRANCH_NAME/ --remote http://release.geneontology.org/$START_DATE --output manifest.json'
+				    }else if( env.BRANCH_NAME == 'master' ){
+					sh 'python3 ./scripts/create-bdbag-remote-file-manifest.py -v --walk $WORKSPACE/mnt/$BRANCH_NAME/ --remote $TARGET_INDEXER_PREFIX --output manifest.json'
+				    }
 
 				    // Make holey BDBag in fixed directory.
 				    sh 'mkdir go-release-reference'
