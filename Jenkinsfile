@@ -22,14 +22,14 @@ pipeline {
 	    returnStdout: true
 	).trim()
 	// The branch of geneontology/go-site to use.
-	TARGET_GO_SITE_BRANCH = 'iteration'
+	TARGET_GO_SITE_BRANCH = 'ontobio1.2.3-2018-07-02'
 	// The people to call when things go bad. It is a comma-space
 	// "separated" string.
-	TARGET_ADMIN_EMAILS = 'sjcarbon@lbl.gov'
+	TARGET_ADMIN_EMAILS = 'edouglass@lbl.gov'
 	// The file bucket(/folder) combination to use.
-	TARGET_BUCKET = 'go-data-product-experimental'
+	TARGET_BUCKET = 'no'
 	// The URL prefix to use when creating site indices.
-	TARGET_INDEXER_PREFIX = 'http://experimental.geneontology.io'
+	TARGET_INDEXER_PREFIX = ''
 	// This variable should typically be 'TRUE', which will cause
 	// some additional basic checks to be made. There are some
 	// very exotic cases where these check may need to be skipped
@@ -521,263 +521,14 @@ pipeline {
             }
 	}
 	//...
-	stage('Produce derivatives') {
-            agent {
-                docker {
-		    image 'geneontology/golr-autoindex:e9bfef53d1783b1d55da6896918aea5960b28615_2018-05-25T123817'
-		    // Reset Jenkins Docker agent default to original
-		    // root.
-		    args '-u root:root --mount type=tmpfs,destination=/srv/solr/data'
-		}
-            }
-            steps {
-                // sh 'ls /srv'
-                // sh 'ls /tmp'
-
-		// Build index into tmpfs.
-		sh 'bash /tmp/run-indexer.sh'
-
-		// Copy tmpfs Solr contents onto skyhook.
-		sh 'tar --use-compress-program=pigz -cvf /tmp/golr-index-contents.tgz -C /srv/solr/data/index .'
-		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-		    // Copy over index.
-		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /tmp/golr-index-contents.tgz skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/solr/'
-		    // Copy over log.
-		    sh 'rsync -avz -e "ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY" /tmp/golr_timestamp.log skyhook@skyhook.berkeleybop.org:/home/skyhook/$BRANCH_NAME/products/solr/'
-		}
-            }
-	}
 	//...
 	stage('Sanity II') {
 	    steps {
 		echo 'TODO: Sanity II'
 	    }
 	}
-	stage('Archive') {
-	    when { anyOf { branch 'release'; branch 'master' } }
-	    steps {
-		// Experimental stanza to support mounting the sshfs
-		// using the "hidden" skyhook identity.
-		sh 'mkdir -p $WORKSPACE/mnt/ || true'
-		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-		    sh 'sshfs -oStrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY -o idmap=user skyhook@skyhook.berkeleybop.org:/home/skyhook $WORKSPACE/mnt/'
-		}
-		// Copy the product to the right location. As well,
-		// archive.
-		withCredentials([file(credentialsId: 'aws_go_push_json', variable: 'S3_PUSH_JSON'), file(credentialsId: 's3cmd_go_push_configuration', variable: 'S3CMD_JSON'), string(credentialsId: 'zenodo_go_sandbox_token', variable: 'ZENODO_TOKEN')]) {
-		    // Ready...
-		    dir('./go-site') {
-			git branch: TARGET_GO_SITE_BRANCH, url: 'https://github.com/geneontology/go-site.git'
 
-			// WARNING: Caveats and reasons as same
-			// pattern above. We need this as some clients
-			// are not standard and it turns out there are
-			// some subtle incompatibilities with urllib3
-			// and boto in some versions, so we will use a
-			// virtual env to paper that over.  See:
-			// https://github.com/geneontology/pipeline/issues/8#issuecomment-356762604
-			sh 'python3 -m venv mypyenv'
-			withEnv(["PATH+EXTRA=${WORKSPACE}/go-site/bin:${WORKSPACE}/go-site/mypyenv/bin", 'PYTHONHOME=', "VIRTUAL_ENV=${WORKSPACE}/go-site/mypyenv", 'PY_ENV=mypyenv', 'PY_BIN=mypyenv/bin']){
 
-			    // Extra package for the indexer.
-			    sh 'python3 ./mypyenv/bin/pip3 install pystache'
-
-			    // Correct for (possibly) bad boto3,
-			    // as mentioned above.
-			    sh 'python3 ./mypyenv/bin/pip3 install boto3'
-
-			    // Extra package for the uploader.
-			    sh 'python3 ./mypyenv/bin/pip3 install filechunkio'
-
-			    // Grab BDBag.
-			    sh 'python3 ./mypyenv/bin/pip3 install bdbag'
-
-			    // Need for large uploads in requests.
-			    sh 'python3 ./mypyenv/bin/pip3 install requests-toolbelt'
-
-			    // Well, we need to do a couple of things here in
-			    // a structured way, so we'll go ahead and drop
-			    // into the scripting mode.
-			    script {
-
-				// Build either a release or testing
-				// version of a generic BDBag/DOI
-				// workflow, keeping special bucket
-				// mappings in mind.
-				if( env.BRANCH_NAME == 'release' || env.BRANCH_NAME == 'master' ){
-
-				    if( env.BRANCH_NAME == 'release' ){
-					sh 'python3 ./scripts/create-bdbag-remote-file-manifest.py -v --walk $WORKSPACE/mnt/$BRANCH_NAME/ --remote http://release.geneontology.org/$START_DATE --output manifest.json'
-				    }else if( env.BRANCH_NAME == 'master' ){
-					sh 'python3 ./scripts/create-bdbag-remote-file-manifest.py -v --walk $WORKSPACE/mnt/$BRANCH_NAME/ --remote $TARGET_INDEXER_PREFIX --output manifest.json'
-				    }
-
-				    // Make holey BDBag in fixed directory.
-				    sh 'mkdir go-release-reference'
-				    sh 'python3 ./mypyenv/bin/bdbag ./go-release-reference --remote-file-manifest manifest.json --archive tgz'
-
-				    // To make a full BDBag, we first
-				    // need a copy of the data as
-				    // BDBags change directory layout
-				    // (e.g. data/).
-				    sh 'mkdir -p $WORKSPACE/copyover/ || true'
-				    sh 'cp -r $WORKSPACE/mnt/$BRANCH_NAME/* $WORKSPACE/copyover/'
-				    // Make the BDBag in the copyover/
-				    // (unarchived, as we want to
-				    // leave it to pigz).
-				    sh 'python3 ./mypyenv/bin/bdbag $WORKSPACE/copyover'
-				    // Tarball the whole directory for
-				    // "deep" archive (handmade BDBag).
-				    sh 'tar --use-compress-program=pigz -cvf go-release-archive.tgz -C $WORKSPACE/copyover .'
-
-				    // We have the archives, now let's
-				    // try and get them into
-				    // position--this is fail-y, so we
-				    // are going to try and buffer
-				    // failure here for the time being
-				    // until we work it all out.
-				    try {
-					// Archive the holey bdbag for
-					// this run.
-					sh 'python3 ./scripts/zenodo-version-update.py --verbose --sandbox --key $ZENODO_TOKEN --concept $ZENODO_REFERENCE_CONCEPT --file go-release-reference.tgz --output ./release-reference-doi.json --revision $START_DATE'
-					// Copy the referential metadata
-					// files and DOI to skyhook
-					// metadata/ for easy inspection.
-					sh 'cp go-release-reference.tgz $WORKSPACE/mnt/$BRANCH_NAME/metadata/go-release-reference.tgz'
-					sh 'cp manifest.json $WORKSPACE/mnt/$BRANCH_NAME/metadata/bdbag-manifest.json'
-					sh 'cp release-reference-doi.json $WORKSPACE/mnt/$BRANCH_NAME/metadata/release-reference-doi.json'
-				    } catch (exception) {
-					// Something went bad with the
-					// Zenodo reference upload.
-					echo "There has been a failure in the reference upload to Zenodo."
-					mail bcc: '', body: "There has been a failure in the reference upload to Zenodo, in ${env.BRANCH_NAME}. Please see: https://build.geneontology.org/job/geneontology/job/pipeline/job/${env.BRANCH_NAME}", cc: '', from: '', replyTo: '', subject: "GO Pipeline Zenodo reference upload fail for ${env.BRANCH_NAME}", to: "${TARGET_ADMIN_EMAILS}"
-				    }
-				    try {
-					// Archive full archive too.
-					sh 'python3 ./scripts/zenodo-version-update.py --verbose --sandbox --key $ZENODO_TOKEN --concept $ZENODO_ARCHIVE_CONCEPT --file go-release-archive.tgz --output ./release-archive-doi.json --revision $START_DATE'
-					// Get the DOI to skyhook for
-					// publishing, but don't
-					// bother with the full
-					// thing--too much space and
-					// already in Zenodo.
-					sh 'cp release-archive-doi.json $WORKSPACE/mnt/$BRANCH_NAME/metadata/release-archive-doi.json'
-				    } catch (exception) {
-					// Something went bad with the
-					// Zenodo archive upload.
-					echo "There has been a failure in the archive upload to Zenodo."
-					mail bcc: '', body: "There has been a failure in the archive upload to Zenodo, in ${env.BRANCH_NAME}. Please see: https://build.geneontology.org/job/geneontology/job/pipeline/job/${env.BRANCH_NAME}", cc: '', from: '', replyTo: '', subject: "GO Pipeline Zenodo archive upload fail for ${env.BRANCH_NAME}", to: "${TARGET_ADMIN_EMAILS}"
-				    }
-				}
-			    }
-			}
-		    }
-		}
-	    }
-	    // WARNING: Extra safety as I expect this to sometimes fail.
-	    post {
-                always {
-		    // Bail on the remote filesystem.
-		    sh 'fusermount -u $WORKSPACE/mnt/ || true'
-		    // Purge the copyover point.
-		    sh 'rm -r -f $WORKSPACE/copyover || true'
-		}
-	    }
-	}
-	stage('Publish') {
-	    when { anyOf { branch 'release'; branch 'snapshot'; branch 'master' } }
-	    steps {
-		// Experimental stanza to support mounting the sshfs
-		// using the "hidden" skyhook identity.
-		sh 'mkdir -p $WORKSPACE/mnt/ || true'
-		withCredentials([file(credentialsId: 'skyhook-private-key', variable: 'SKYHOOK_IDENTITY')]) {
-		    sh 'sshfs -oStrictHostKeyChecking=no -o IdentitiesOnly=true -o IdentityFile=$SKYHOOK_IDENTITY -o idmap=user skyhook@skyhook.berkeleybop.org:/home/skyhook $WORKSPACE/mnt/'
-		}
-		// Copy the product to the right location. As well,
-		// archive.
-		withCredentials([file(credentialsId: 'aws_go_push_json', variable: 'S3_PUSH_JSON'), file(credentialsId: 's3cmd_go_push_configuration', variable: 'S3CMD_JSON')]) {
-		    // Ready...
-		    dir('./go-site') {
-			git branch: TARGET_GO_SITE_BRANCH, url: 'https://github.com/geneontology/go-site.git'
-
-			// TODO: Special handling still needed w/o OSF.io?
-			// WARNING: Caveats and reasons as same
-			// pattern above. We need this as some clients
-			// are not standard and it turns out there are
-			// some subtle incompatibilities with urllib3
-			// and boto in some versions, so we will use a
-			// virtual env to paper that over.  See:
-			// https://github.com/geneontology/pipeline/issues/8#issuecomment-356762604
-			sh 'python3 -m venv mypyenv'
-			withEnv(["PATH+EXTRA=${WORKSPACE}/go-site/bin:${WORKSPACE}/go-site/mypyenv/bin", 'PYTHONHOME=', "VIRTUAL_ENV=${WORKSPACE}/go-site/mypyenv", 'PY_ENV=mypyenv', 'PY_BIN=mypyenv/bin']){
-
-			    // Extra package for the indexer.
-			    sh 'python3 ./mypyenv/bin/pip3 install pystache'
-
-			    // Correct for (possibly) bad boto3,
-			    // as mentioned above.
-			    sh 'python3 ./mypyenv/bin/pip3 install boto3'
-
-			    // Extra package for the uploader.
-			    sh 'python3 ./mypyenv/bin/pip3 install filechunkio'
-
-			    // Well, we need to do a couple of things here in
-			    // a structured way, so we'll go ahead and drop
-			    // into the scripting mode.
-			    script {
-
-				// Create working index off of
-				// skyhook. For "release", this will
-				// be "current". For "snapshot", this
-				// will be "snapshot".
-		 		sh 'python3 ./scripts/directory_indexer.py -v --inject ./scripts/directory-index-template.html --directory $WORKSPACE/mnt/$BRANCH_NAME --prefix $TARGET_INDEXER_PREFIX -x'
-
-				// Push into S3 buckets. Simple
-				// overall case: copy tree directly
-				// over. For "release", this will be
-				// "current". For "snapshot", this
-				// will be "snapshot".
-				sh 'python3 ./scripts/s3-uploader.py -v --credentials $S3_PUSH_JSON --directory $WORKSPACE/mnt/$BRANCH_NAME/ --bucket $TARGET_BUCKET --number $BUILD_ID --pipeline $BRANCH_NAME'
-
-				// Also, some runs have special maps
-				// to buckets...
-				if( env.BRANCH_NAME == 'release' ){
-
-				    // "release" -> dated path for
-				    // indexing (clobbering
-				    // "current"'s index.
-		 		    sh 'python3 ./scripts/directory_indexer.py -v --inject ./scripts/directory-index-template.html --directory $WORKSPACE/mnt/$BRANCH_NAME --prefix http://release.geneontology.org/$START_DATE -x -u'
-				    // "release" -> dated path for S3.
-				    sh 'python3 ./scripts/s3-uploader.py -v --credentials $S3_PUSH_JSON --directory $WORKSPACE/mnt/$BRANCH_NAME/ --bucket go-data-product-release/$START_DATE --number $BUILD_ID --pipeline $BRANCH_NAME'
-
-				    // Build the capper index.html...
-				    sh 'python3 ./scripts/bucket-indexer.py --credentials $S3_PUSH_JSON --bucket go-data-product-release --inject ./scripts/directory-index-template.html --prefix http://release.geneontology.org > top-level-index.html'
-				    // ...and push it up to S3.
-				    sh 's3cmd -c $S3CMD_JSON --acl-public --mime-type=text/html --cf-invalidate put top-level-index.html s3://go-data-product-release/index.html'
-
-				}else if( env.BRANCH_NAME == 'snapshot' ){
-
-				    // Currently, the "daily"
-				    // debugging buckets are intended
-				    // to be RO directly in S3 for
-				    // debugging.
-				    sh 'python3 ./scripts/s3-uploader.py -v --credentials $S3_PUSH_JSON --directory $WORKSPACE/mnt/$BRANCH_NAME/ --bucket go-data-product-daily/$START_DAY --number $BUILD_ID --pipeline $BRANCH_NAME'
-
-				}else if( env.BRANCH_NAME == 'master' ){
-				    // Pass.
-				}
-			    }
-			}
-		    }
-		}
-	    }
-	    // WARNING: Extra safety as I expect this to sometimes fail.
-	    post {
-                always {
-		    // Bail on the remote filesystem.
-		    sh 'fusermount -u $WORKSPACE/mnt/ || true'
-		}
-	    }
-	}
 	// Big things to do on release.
 	stage('Deploy') {
 	    when { anyOf { branch 'release' } }
