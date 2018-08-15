@@ -22,7 +22,7 @@ pipeline {
 	    returnStdout: true
 	).trim()
 	// The branch of geneontology/go-site to use.
-	TARGET_GO_SITE_BRANCH = 'ontobio1.2.3-2018-07-02'
+	TARGET_GO_SITE_BRANCH = 'ontobio1.2.4-2018-08-09'
 	// The people to call when things go bad. It is a comma-space
 	// "separated" string.
 	TARGET_ADMIN_EMAILS = 'edouglass@lbl.gov'
